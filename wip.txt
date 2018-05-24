@@ -1,0 +1,34 @@
+// Start Beta Transaction Example 2
+
+// In the following block, the following write concerns are used:
+// the updateOne and insertOne operations uses w = 1, the transaction commit/abort uses w = "majority".
+try (ClientSession clientSession = client.startSession()) {
+
+    clientSession.startTransaction(TransactionOptions.builder().writeConcern(WriteConcern.MAJORITY).build());
+
+    inventory.updateOne(clientSession, eq("sku", "abc123"), inc("qty", -100));
+
+    // The write concern specified here will be ignored
+    shipment.withWriteConcern(WriteConcern.MAJORITY)
+            .insertOne(clientSession, new Document("sku", "abc123").append("qty", 100));
+
+    clientSession.commitTransaction();
+}
+
+// End Beta Transaction Example 2
+
+// Start Beta Transaction Example 3
+
+try {
+    runShipmentTransaction();
+} catch (MongoSocketException e) {
+    runShipmentTransaction();
+} catch (MongoServerException e) {
+    if (Arrays.asList(112, 244, 251).contains(e.getCode())) {
+        runShipmentTransaction();
+    } else {
+        throw e;
+    }
+}
+
+// End Beta Transaction Example 3
