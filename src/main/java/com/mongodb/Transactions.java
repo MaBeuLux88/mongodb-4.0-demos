@@ -26,7 +26,6 @@ public class Transactions {
 
     private static String mongodbURI;
     private final BigDecimal BEER_PRICE = BigDecimal.valueOf(3);
-    private final BigDecimal WINE_PRICE = BigDecimal.valueOf(5);
     private final String BEER_ID = "beer";
     private MongoClient client;
     private MongoCollection<Cart> cartCollection;
