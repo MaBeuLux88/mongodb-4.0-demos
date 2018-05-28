@@ -14,8 +14,10 @@ import org.bson.conversions.Bson;
 
 import java.util.Collections;
 import java.util.List;
-import java.util.Timer;
-import java.util.TimerTask;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 import java.util.logging.Level;
 
@@ -25,54 +27,30 @@ import static org.bson.codecs.configuration.CodecRegistries.fromRegistries;
 
 public class ChangeStreams {
 
-    private static String mongodbURI;
-    private MongoCollection<Cart> cartCollection;
     private MongoCollection<Product> productCollection;
 
     public static void main(String[] args) {
-        mongodbURI = args[0];
-        new ChangeStreams().runtime();
+        MongoDatabase db = initMongoDB(args[0]);
+        MongoCollection<Cart> cartCollection = db.getCollection("cart", Cart.class);
+        MongoCollection<Product> productCollection = db.getCollection("product", Product.class);
+
+
+        ExecutorService executor = Executors.newFixedThreadPool(2);
+        executor.submit(() -> watchChangeStream(cartCollection, Filters.in("operationType", "insert", "update")));
+        executor.submit(() -> watchChangeStream(productCollection, Filters.eq("operationType", "update")));
+
+        ScheduledExecutorService scheduled = Executors.newSingleThreadScheduledExecutor();
+        scheduled.scheduleWithFixedDelay(System.out::println, 0, 1, TimeUnit.SECONDS);
     }
 
-    private void runtime() {
-        initMongoDB();
-
-        Thread t1 = new Thread(this::cartChangeStream);
-        t1.start();
-
-        Thread t2 = new Thread(this::stockChangeStream);
-        t2.start();
-
-        carriageReturnEverySeconds();
-    }
-
-    private void cartChangeStream() {
-        cartChangeStream(cartCollection);
-    }
-
-    private void stockChangeStream() {
-        productChangeStream(productCollection);
-    }
-
-    private void cartChangeStream(MongoCollection<Cart> collection) {
-        Bson filterInsertUpdate = Filters.in("operationType", "insert", "update");
-        List<Bson> pipeline = Collections.singletonList(Aggregates.match(filterInsertUpdate));
+    private static void watchChangeStream(MongoCollection<?> collection, Bson filter) {
+        List<Bson> pipeline = Collections.singletonList(Aggregates.match(filter));
         collection.watch(pipeline)
                   .fullDocument(FullDocument.UPDATE_LOOKUP)
-                  .forEach((Consumer<ChangeStreamDocument<Cart>>) stream -> System.out.println(
-                          stream.getClusterTime() + " => " + stream.getFullDocument()));
+                  .forEach((Consumer<ChangeStreamDocument<?>>) stream -> System.out.println(stream.getClusterTime() + " => " + stream.getFullDocument()));
     }
 
-    private void productChangeStream(MongoCollection<Product> collection) {
-        Bson filterInsertUpdate = Filters.eq("operationType", "update");
-        List<Bson> pipeline = Collections.singletonList(Aggregates.match(filterInsertUpdate));
-        collection.watch(pipeline)
-                  .fullDocument(FullDocument.UPDATE_LOOKUP)
-                  .forEach((Consumer<ChangeStreamDocument<Product>>) stream -> System.out.println(
-                          stream.getClusterTime() + " => " + stream.getFullDocument()));
-    }
-
-    private void initMongoDB() {
+    private static MongoDatabase initMongoDB(String mongodbURI) {
         getLogger("org.mongodb.driver").setLevel(Level.SEVERE);
 
         CodecRegistry codecRegistry = fromRegistries(MongoClient.getDefaultCodecRegistry(), fromProviders(
@@ -87,19 +65,6 @@ public class ChangeStreams {
         db.createCollection("cart");
         db.createCollection("product");
 
-        cartCollection = db.getCollection("cart", Cart.class);
-        productCollection = db.getCollection("product", Product.class);
+        return db;
     }
-
-    private void carriageReturnEverySeconds() {
-        Timer timer = new Timer();
-        TimerTask reportTask = new TimerTask() {
-            @Override
-            public void run() {
-                System.out.println();
-            }
-        };
-        timer.schedule(reportTask, 0, 1000);
-    }
-
 }
