@@ -14,8 +14,10 @@ import org.bson.conversions.Bson;
 
 import java.util.Collections;
 import java.util.List;
-import java.util.Timer;
-import java.util.TimerTask;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 import java.util.logging.Level;
 
@@ -37,21 +39,12 @@ public class ChangeStreams {
     private void runtime() {
         initMongoDB();
 
-        Thread t1 = new Thread(this::cartChangeStream);
-        t1.start();
+        ExecutorService executor = Executors.newFixedThreadPool(2);
+        executor.submit(() -> cartChangeStream(cartCollection));
+        executor.submit(() -> productChangeStream(productCollection));
 
-        Thread t2 = new Thread(this::stockChangeStream);
-        t2.start();
-
-        carriageReturnEverySeconds();
-    }
-
-    private void cartChangeStream() {
-        cartChangeStream(cartCollection);
-    }
-
-    private void stockChangeStream() {
-        productChangeStream(productCollection);
+        ScheduledExecutorService scheduled = Executors.newSingleThreadScheduledExecutor();
+        scheduled.scheduleWithFixedDelay(System.out::println, 0, 1, TimeUnit.SECONDS);
     }
 
     private void cartChangeStream(MongoCollection<Cart> collection) {
@@ -90,16 +83,4 @@ public class ChangeStreams {
         cartCollection = db.getCollection("cart", Cart.class);
         productCollection = db.getCollection("product", Product.class);
     }
-
-    private void carriageReturnEverySeconds() {
-        Timer timer = new Timer();
-        TimerTask reportTask = new TimerTask() {
-            @Override
-            public void run() {
-                System.out.println();
-            }
-        };
-        timer.schedule(reportTask, 0, 1000);
-    }
-
 }
