@@ -27,13 +27,10 @@ import static org.bson.codecs.configuration.CodecRegistries.fromRegistries;
 
 public class ChangeStreams {
 
-    private MongoCollection<Product> productCollection;
-
     public static void main(String[] args) {
         MongoDatabase db = initMongoDB(args[0]);
         MongoCollection<Cart> cartCollection = db.getCollection("cart", Cart.class);
         MongoCollection<Product> productCollection = db.getCollection("product", Product.class);
-
 
         ExecutorService executor = Executors.newFixedThreadPool(2);
         executor.submit(() -> watchChangeStream(cartCollection, Filters.in("operationType", "insert", "update")));
