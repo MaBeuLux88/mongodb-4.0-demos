@@ -27,46 +27,30 @@ import static org.bson.codecs.configuration.CodecRegistries.fromRegistries;
 
 public class ChangeStreams {
 
-    private static String mongodbURI;
-    private MongoCollection<Cart> cartCollection;
     private MongoCollection<Product> productCollection;
 
     public static void main(String[] args) {
-        mongodbURI = args[0];
-        new ChangeStreams().runtime();
-    }
+        MongoDatabase db = initMongoDB(args[0]);
+        MongoCollection<Cart> cartCollection = db.getCollection("cart", Cart.class);
+        MongoCollection<Product> productCollection = db.getCollection("product", Product.class);
 
-    private void runtime() {
-        initMongoDB();
 
         ExecutorService executor = Executors.newFixedThreadPool(2);
-        executor.submit(() -> cartChangeStream(cartCollection));
-        executor.submit(() -> productChangeStream(productCollection));
+        executor.submit(() -> watchChangeStream(cartCollection, Filters.in("operationType", "insert", "update")));
+        executor.submit(() -> watchChangeStream(productCollection, Filters.eq("operationType", "update")));
 
         ScheduledExecutorService scheduled = Executors.newSingleThreadScheduledExecutor();
         scheduled.scheduleWithFixedDelay(System.out::println, 0, 1, TimeUnit.SECONDS);
     }
 
-    private void cartChangeStream(MongoCollection<Cart> collection) {
-        List<Bson> pipeline = createFilter(Filters.in("operationType", "insert", "update"));
-        collection.watch(pipeline).fullDocument(FullDocument.UPDATE_LOOKUP).forEach(printReport());
+    private static void watchChangeStream(MongoCollection<?> collection, Bson filter) {
+        List<Bson> pipeline = Collections.singletonList(Aggregates.match(filter));
+        collection.watch(pipeline)
+                  .fullDocument(FullDocument.UPDATE_LOOKUP)
+                  .forEach((Consumer<ChangeStreamDocument<?>>) stream -> System.out.println(stream.getClusterTime() + " => " + stream.getFullDocument()));
     }
 
-    private void productChangeStream(MongoCollection<Product> collection) {
-        List<Bson> pipeline = createFilter(Filters.eq("operationType", "update"));
-        collection.watch(pipeline).fullDocument(FullDocument.UPDATE_LOOKUP).forEach(printReport());
-    }
-
-    private <T> Consumer<ChangeStreamDocument<T>> printReport() {
-        return stream -> System.out.println(stream.getClusterTime() + " => " + stream.getFullDocument());
-    }
-
-    private List<Bson> createFilter(Bson filterInsertUpdate) {
-        return Collections.singletonList(Aggregates.match(filterInsertUpdate));
-    }
-
-
-    private void initMongoDB() {
+    private static MongoDatabase initMongoDB(String mongodbURI) {
         getLogger("org.mongodb.driver").setLevel(Level.SEVERE);
 
         CodecRegistry codecRegistry = fromRegistries(MongoClient.getDefaultCodecRegistry(), fromProviders(
@@ -81,7 +65,6 @@ public class ChangeStreams {
         db.createCollection("cart");
         db.createCollection("product");
 
-        cartCollection = db.getCollection("cart", Cart.class);
-        productCollection = db.getCollection("product", Product.class);
+        return db;
     }
 }
