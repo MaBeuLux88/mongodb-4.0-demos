@@ -48,22 +48,23 @@ public class ChangeStreams {
     }
 
     private void cartChangeStream(MongoCollection<Cart> collection) {
-        Bson filterInsertUpdate = Filters.in("operationType", "insert", "update");
-        List<Bson> pipeline = Collections.singletonList(Aggregates.match(filterInsertUpdate));
-        collection.watch(pipeline)
-                  .fullDocument(FullDocument.UPDATE_LOOKUP)
-                  .forEach((Consumer<ChangeStreamDocument<Cart>>) stream -> System.out.println(
-                          stream.getClusterTime() + " => " + stream.getFullDocument()));
+        List<Bson> pipeline = createFilter(Filters.in("operationType", "insert", "update"));
+        collection.watch(pipeline).fullDocument(FullDocument.UPDATE_LOOKUP).forEach(printReport());
     }
 
     private void productChangeStream(MongoCollection<Product> collection) {
-        Bson filterInsertUpdate = Filters.eq("operationType", "update");
-        List<Bson> pipeline = Collections.singletonList(Aggregates.match(filterInsertUpdate));
-        collection.watch(pipeline)
-                  .fullDocument(FullDocument.UPDATE_LOOKUP)
-                  .forEach((Consumer<ChangeStreamDocument<Product>>) stream -> System.out.println(
-                          stream.getClusterTime() + " => " + stream.getFullDocument()));
+        List<Bson> pipeline = createFilter(Filters.eq("operationType", "update"));
+        collection.watch(pipeline).fullDocument(FullDocument.UPDATE_LOOKUP).forEach(printReport());
     }
+
+    private <T> Consumer<ChangeStreamDocument<T>> printReport() {
+        return stream -> System.out.println(stream.getClusterTime() + " => " + stream.getFullDocument());
+    }
+
+    private List<Bson> createFilter(Bson filterInsertUpdate) {
+        return Collections.singletonList(Aggregates.match(filterInsertUpdate));
+    }
+
 
     private void initMongoDB() {
         getLogger("org.mongodb.driver").setLevel(Level.SEVERE);
