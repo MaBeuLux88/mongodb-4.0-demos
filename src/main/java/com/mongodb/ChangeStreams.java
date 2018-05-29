@@ -27,31 +27,36 @@ import static org.bson.codecs.configuration.CodecRegistries.fromRegistries;
 
 public class ChangeStreams {
 
+    private static final Bson filterUpdate = Filters.eq("operationType", "update");
+    private static final Bson filterInsertUpdate = Filters.in("operationType", "insert", "update");
+
     public static void main(String[] args) {
         MongoDatabase db = initMongoDB(args[0]);
         MongoCollection<Cart> cartCollection = db.getCollection("cart", Cart.class);
         MongoCollection<Product> productCollection = db.getCollection("product", Product.class);
 
         ExecutorService executor = Executors.newFixedThreadPool(2);
-        executor.submit(() -> watchChangeStream(cartCollection, Filters.in("operationType", "insert", "update")));
-        executor.submit(() -> watchChangeStream(productCollection, Filters.eq("operationType", "update")));
+        executor.submit(() -> watchChangeStream(productCollection, filterUpdate));
+        executor.submit(() -> watchChangeStream(cartCollection, filterInsertUpdate));
 
         ScheduledExecutorService scheduled = Executors.newSingleThreadScheduledExecutor();
         scheduled.scheduleWithFixedDelay(System.out::println, 0, 1, TimeUnit.SECONDS);
     }
 
     private static void watchChangeStream(MongoCollection<?> collection, Bson filter) {
+        System.out.println("Watching " + collection.getNamespace());
         List<Bson> pipeline = Collections.singletonList(Aggregates.match(filter));
         collection.watch(pipeline)
                   .fullDocument(FullDocument.UPDATE_LOOKUP)
-                  .forEach((Consumer<ChangeStreamDocument<?>>) stream -> System.out.println(stream.getClusterTime() + " => " + stream.getFullDocument()));
+                  .forEach((Consumer<ChangeStreamDocument<?>>) doc -> System.out.println(
+                          doc.getClusterTime() + " => " + doc.getFullDocument()));
     }
 
     private static MongoDatabase initMongoDB(String mongodbURI) {
         getLogger("org.mongodb.driver").setLevel(Level.SEVERE);
 
-        CodecRegistry codecRegistry = fromRegistries(MongoClient.getDefaultCodecRegistry(), fromProviders(
-                PojoCodecProvider.builder().register(Cart.class).register(Cart.Item.class).register(Product.class).build()));
+        CodecRegistry providers = fromProviders(PojoCodecProvider.builder().register("com.mongodb.models").build());
+        CodecRegistry codecRegistry = fromRegistries(MongoClient.getDefaultCodecRegistry(), providers);
 
         MongoClientOptions.Builder options = new MongoClientOptions.Builder().codecRegistry(codecRegistry);
         MongoClientURI uri = new MongoClientURI(mongodbURI, options);

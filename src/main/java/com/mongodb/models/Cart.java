@@ -52,7 +52,6 @@ public class Cart {
 
     @Override
     public int hashCode() {
-
         return Objects.hash(id, items);
     }
 
@@ -94,7 +93,6 @@ public class Cart {
         }
 
         public Item setPrice(BigDecimal price) {
-
             this.price = price;
             return this;
         }

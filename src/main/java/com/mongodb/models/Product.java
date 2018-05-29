@@ -9,19 +9,13 @@ public class Product {
     private Integer stock;
     private BigDecimal price;
 
-    public Product(String id) {
+    public Product(String id, Integer stock, BigDecimal price) {
         this.id = id;
+        this.stock = stock;
+        this.price = price;
     }
 
     public Product() {
-    }
-
-    public static Product wine() {
-        return new Product("wine");
-    }
-
-    public static Product beer() {
-        return new Product("beer");
     }
 
     public String getId() {
@@ -68,7 +62,6 @@ public class Product {
 
     @Override
     public int hashCode() {
-
         return Objects.hash(id, stock, price);
     }
 
