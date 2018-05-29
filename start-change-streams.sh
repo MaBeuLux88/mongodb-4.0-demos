@@ -1,3 +1,2 @@
 #!/usr/bin/env bash
-mvn -q clean package
-java -jar target/ChangeStreams-jar-with-dependencies.jar mongodb://localhost/test?retryWrites=true
+java -cp target/mongodb-4.0-demos-1.0.0-jar-with-dependencies.jar com.mongodb.ChangeStreams mongodb://localhost/test
