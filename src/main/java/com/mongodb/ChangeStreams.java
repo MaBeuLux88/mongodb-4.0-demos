@@ -2,12 +2,12 @@ package com.mongodb;
 
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoDatabase;
-import com.mongodb.client.model.Aggregates;
-import com.mongodb.client.model.Filters;
+import com.mongodb.client.model.*;
 import com.mongodb.client.model.changestream.ChangeStreamDocument;
 import com.mongodb.client.model.changestream.FullDocument;
 import com.mongodb.models.Cart;
 import com.mongodb.models.Product;
+import org.bson.BsonDocument;
 import org.bson.codecs.configuration.CodecRegistry;
 import org.bson.codecs.pojo.PojoCodecProvider;
 import org.bson.conversions.Bson;
@@ -29,16 +29,15 @@ public class ChangeStreams {
 
     private static final Bson filterUpdate = Filters.eq("operationType", "update");
     private static final Bson filterInsertUpdate = Filters.in("operationType", "insert", "update");
+    private static final String jsonSchema = "{ $jsonSchema: { bsonType: \"object\", required: [ \"_id\", \"price\", \"stock\" ], properties: { _id: { bsonType: \"string\", description: \"must be a string and is required\" }, price: { bsonType: \"decimal\", minimum: 0, description: \"must be a positive decimal and is required\" }, stock: { bsonType: \"int\", minimum: 0, description: \"must be a positive integer and is required\" } } } } ";
 
     public static void main(String[] args) {
         MongoDatabase db = initMongoDB(args[0]);
         MongoCollection<Cart> cartCollection = db.getCollection("cart", Cart.class);
         MongoCollection<Product> productCollection = db.getCollection("product", Product.class);
-
         ExecutorService executor = Executors.newFixedThreadPool(2);
         executor.submit(() -> watchChangeStream(productCollection, filterUpdate));
         executor.submit(() -> watchChangeStream(cartCollection, filterInsertUpdate));
-
         ScheduledExecutorService scheduled = Executors.newSingleThreadScheduledExecutor();
         scheduled.scheduleWithFixedDelay(System.out::println, 0, 1, TimeUnit.SECONDS);
     }
@@ -54,19 +53,20 @@ public class ChangeStreams {
 
     private static MongoDatabase initMongoDB(String mongodbURI) {
         getLogger("org.mongodb.driver").setLevel(Level.SEVERE);
-
         CodecRegistry providers = fromProviders(PojoCodecProvider.builder().register("com.mongodb.models").build());
         CodecRegistry codecRegistry = fromRegistries(MongoClient.getDefaultCodecRegistry(), providers);
-
         MongoClientOptions.Builder options = new MongoClientOptions.Builder().codecRegistry(codecRegistry);
         MongoClientURI uri = new MongoClientURI(mongodbURI, options);
         MongoClient client = new MongoClient(uri);
-
         MongoDatabase db = client.getDatabase("test");
         db.drop();
         db.createCollection("cart");
-        db.createCollection("product");
-
+        db.createCollection("product", productJsonSchemaValidator());
         return db;
+    }
+
+    private static CreateCollectionOptions productJsonSchemaValidator() {
+        return new CreateCollectionOptions().validationOptions(
+                new ValidationOptions().validationAction(ValidationAction.ERROR).validator(BsonDocument.parse(jsonSchema)));
     }
 }
