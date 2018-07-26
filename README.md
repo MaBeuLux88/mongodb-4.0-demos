@@ -536,7 +536,7 @@ Cart{id='Alice', items=[Item{productId=beer, quantity=4, price=3}]}
 ```
 ## Next Steps
 Thanks for taking the time to read my post - I hope you found it useful and interesting.
-As a reminder, all the code is available in this archive[INSERT CORRECT LINK to ARCHIVE.zip HERE] for you to experiment.
+As a reminder, all the code is available [on this Github repository](https://github.com/MaBeuLux88/mongodb-4.0-demos) for you to experiment.
 
 If you are looking for a very simple way to get started with MongoDB, you can do that in just 5 clicks on our MongoDB Atlas database service in the cloud.
 
