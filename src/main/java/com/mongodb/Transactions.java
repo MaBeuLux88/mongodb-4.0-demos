@@ -62,7 +62,8 @@ public class Transactions {
         System.out.println("Alice wants 2 beers.");
         System.out.println("We have to create a cart in the 'cart' collection and update the stock in the 'product' collection.");
         System.out.println("The 2 actions are correlated but can not be executed on the same cluster time.");
-        System.out.println("Any error blocking one operation could result in stock error or beer sale we don't own.");
+        System.out.println(
+                "Any error blocking one operation could result in stock error or a sale of beer that we can't fulfill as we have no stock.");
         System.out.println("---------------------------------------------------------------------------");
         aliceWantsTwoBeers();
         sleep();
