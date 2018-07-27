@@ -35,26 +35,26 @@ Before we dive in this blog post, you can find all the code and try multi-docume
 > 
 > If you use Docker:
 > 
-> In the first one: 
+> First shell: 
 > ```
 > ./compile-docker.sh
 > ./change-streams-docker.sh
 > ```
 > 
-> In the second one:
+> Second shell:
 > ```
 > ./transactions-docker.sh
 > ```
 > 
 > If you do not use Docker, you will need to install Maven 3.5.X and a JDK 10 (or JDK 8 minimum but you will need to update the Java versions in the pom.xml):
 > 
-> In the first one: 
+> First shell: 
 > ```
 > ./compile.sh
 > ./change-streams.sh
 > ```
 > 
-> In the second one:
+> Second shell:
 > ```
 > ./transactions.sh
 > ```
