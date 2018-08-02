@@ -553,6 +553,6 @@ Cart{id='Alice', items=[Item{productId=beer, quantity=4, price=3}]}
 Thanks for taking the time to read my post - I hope you found it useful and interesting.
 As a reminder, all the code is available [on this Github repository](https://github.com/MaBeuLux88/mongodb-4.0-demos) for you to experiment.
 
-If you are looking for a very simple way to get started with MongoDB, you can do that in just 5 clicks on our MongoDB Atlas database service in the cloud.
+If you are looking for a very simple way to get started with MongoDB, you can do that in just 5 clicks on our [MongoDB Atlas database service](https://www.mongodb.com/cloud/atlas) in the cloud.
 
-Also, multi-document ACID transactions is not the only new feature in MongoDB 4.0, so feel free to take a look at our free course on MongoDB University M040: New Features and Tools in MongoDB 4.0 and our guide to what’s new in MongoDB 4.0 where you can learn more about native type conversions, new visualization and analytics tools, and Kubernetes integration.
+Also, multi-document ACID transactions is not the only new feature in MongoDB 4.0, so feel free to take a look at our free course on [MongoDB University M040: New Features and Tools in MongoDB 4.0](https://university.mongodb.com/courses/M040/about) and our [guide to what’s new in MongoDB 4.0](https://www.mongodb.com/collateral/mongodb-40-whats-new) where you can learn more about native type conversions, new visualization and analytics tools, and Kubernetes integration.
