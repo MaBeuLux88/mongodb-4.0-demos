@@ -4,7 +4,7 @@
 MongoDB 4.0 adds support for multi-document ACID transactions.
 
 But wait... Does that mean MongoDB did not support transactions until now?
-No, actually MongoDB has always supported transactions in the form of single document transactions. MongoDB 4.0 extends these transactional guarantees across multiple documents and multiple statements. What good would a database be without any form of transactional data integrity guarantee?
+No, actually MongoDB has always supported transactions in the form of single document transactions. MongoDB 4.0 extends these transactional guarantees across multiple documents, multiple statements, multiple collections, and multiple databases. What good would a database be without any form of transactional data integrity guarantee?
 
 Before we dive in this blog post, you can find all the code and try multi-document ACID transactions [here](https://github.com/MaBeuLux88/mongodb-4.0-demos).
 
@@ -28,7 +28,7 @@ Before we dive in this blog post, you can find all the code and try multi-docume
 > ### Step 2: Start Java
 > This demo contains two main programs: `ChangeStreams.java` and `Transactions.java`.
 > 
-> * The Change Steams allow you to monitor what's happening in the MonogDB server.
+> * Change Steams allow you to be notified of any data changes within a MongoDB collection or database. 
 > * The Transaction process is the demo itself.
 > 
 > You need two shells to run them.
@@ -63,7 +63,7 @@ Let’s compare our existing single document transactions with MongoDB 4.0’s A
 
 ## Prior to MongoDB 4.0
 
-Even in MongoDB 3.6 and earlier, every write operation is represented as a **transaction limited to the document level** in the storage layer. Because the document model brings together related data that would otherwise be modeled across separate parent-child tables in a tabular schema, MongoDB’s atomic single-document operations provide transaction semantics that meet the data integrity needs of the majority of applications.
+Even in MongoDB 3.6 and earlier, every write operation is represented as a **transaction scoped to the level of an individual document** in the storage layer. Because the document model brings together related data that would otherwise be modeled across separate parent-child tables in a tabular schema, MongoDB’s atomic single-document operations provide transaction semantics that meet the data integrity needs of the majority of applications.
 
 Every typical write operation modifying multiple documents actually happens in several independent transactions: one for each document.
 
@@ -186,7 +186,7 @@ Multi-document ACID transactions in MongoDB are very similar to what you probabl
 
 MongoDB’s transactions are a conversational set of related operations that must atomically commit or fully rollback with all-or-nothing execution.
 
-Transactions are used to make sure operations are atomic even across multiple collections or databases. Thus, another user can only see all the operations or none of them with snapshot isolation reads.
+Transactions are used to make sure operations are atomic even across multiple collections or databases. Thus, with snapshot isolation reads, another user can only see all the operations or none of them.
 
 Let’s now add a shopping cart to our example.
 
