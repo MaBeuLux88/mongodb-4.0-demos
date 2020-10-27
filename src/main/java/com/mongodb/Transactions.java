@@ -109,7 +109,7 @@ public class Transactions {
         try {
             productCollection.updateOne(filterId, stockUpdate);
         } catch (MongoCommandException | MongoWriteException e) {
-            System.out.println("#####   MongoCommandException  #####");
+            System.out.println("#####      MongoException      #####");
             System.out.println("##### STOCK CANNOT BE NEGATIVE #####");
             throw e;
         }
@@ -120,7 +120,7 @@ public class Transactions {
         try {
             productCollection.updateOne(session, filterId, stockUpdate);
         } catch (MongoCommandException | MongoWriteException e) {
-            System.out.println("#####   MongoCommandException  #####");
+            System.out.println("#####      MongoException      #####");
             System.out.println("##### STOCK CANNOT BE NEGATIVE #####");
             throw e;
         }
