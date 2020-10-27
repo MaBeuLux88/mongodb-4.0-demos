@@ -94,7 +94,7 @@ public class Transactions {
             sleep();
             removingBeerFromStock(session);
             session.commitTransaction();
-        } catch (MongoCommandException e) {
+        } catch (MongoCommandException | MongoWriteException e) {
             session.abortTransaction();
             System.out.println("####### ROLLBACK TRANSACTION #######");
         } finally {
@@ -108,7 +108,7 @@ public class Transactions {
         System.out.println("Trying to update beer stock : -2 beers.");
         try {
             productCollection.updateOne(filterId, stockUpdate);
-        } catch (MongoCommandException e) {
+        } catch (MongoCommandException | MongoWriteException e) {
             System.out.println("#####   MongoCommandException  #####");
             System.out.println("##### STOCK CANNOT BE NEGATIVE #####");
             throw e;
@@ -119,7 +119,7 @@ public class Transactions {
         System.out.println("Trying to update beer stock : -2 beers.");
         try {
             productCollection.updateOne(session, filterId, stockUpdate);
-        } catch (MongoCommandException e) {
+        } catch (MongoCommandException | MongoWriteException e) {
             System.out.println("#####   MongoCommandException  #####");
             System.out.println("##### STOCK CANNOT BE NEGATIVE #####");
             throw e;
